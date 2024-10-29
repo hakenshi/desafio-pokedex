@@ -4,7 +4,6 @@ import {
     Pagination,
     PaginationContent,
     PaginationItem,
-    PaginationNext, PaginationPrevious
 } from "@/components/ui/pagination";
 import SearchForm from "@/components/search-form";
 import {Pokemon} from "@/types/types";

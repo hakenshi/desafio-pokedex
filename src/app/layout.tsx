@@ -3,7 +3,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Image from "next/image";
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -39,11 +38,6 @@ export default function RootLayout({
             Pokédex
             </p>
             </Link>
-            {/*<div>*/}
-            {/*  <Link href={`/pokemon/${Math.floor(Math.random() * 1025)}`}>*/}
-            {/*    Random Pokemon*/}
-            {/*  </Link>*/}
-            {/*</div>*/}
           </nav>
         </header>
         <main className="w-full h-full flex justify-center items-center">

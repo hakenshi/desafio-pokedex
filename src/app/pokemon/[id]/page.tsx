@@ -1,8 +1,7 @@
 'use client'
 
-import {Badge} from "@/components/ui/badge";
 import {Button, buttonVariants} from "@/components/ui/button";
-import {Pokemon, PokemonTypes} from "@/types/types";
+import {Pokemon} from "@/types/types";
 import Link from "next/link";
 import {useCallback, useEffect, useState} from "react"
 import {useSearchParams, useRouter, useParams} from "next/navigation";
