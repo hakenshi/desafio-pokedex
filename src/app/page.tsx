@@ -29,44 +29,71 @@ async function getPokemonData(page: number, name?: string, typeName?: string, po
     habitats: { name: string; url: string }[]
 }> {
     "use server";
-    const offset = Math.min(Math.max(page * PER_PAGE_LIMIT, 0), 1015)
+    
+    // Aplicar filtros na URL da API para reduzir dados transferidos
+    let apiUrl = `https://pokeapi.co/api/v2/pokemon`;
+    
+    if (name || typeName || pokemonHabitat) {
+        // Se houver filtros, buscar todos para filtrar no servidor
+        const offset = 0;
+        const limit = 1025;
+        apiUrl += `?limit=${limit}&offset=${offset}`;
+    } else {
+        // Se não houver filtros, usar paginação normal
+        const offset = Math.min(Math.max(page * PER_PAGE_LIMIT, 0), 1015);
+        apiUrl += `?limit=${PER_PAGE_LIMIT}&offset=${offset}`;
+    }
 
-    const pageLimit = name || pokemonHabitat || typeName ? 1025 : PER_PAGE_LIMIT
-    const CONCURRENCY_LIMIT = name ? 25 : 5;
-    const limit = pLimit(CONCURRENCY_LIMIT);
+    const [pokemonResponse, typesResponse, habitatsResponse] = await Promise.all([
+        fetch(apiUrl, {
+            next: { revalidate: 3600 }
+        }),
+        fetch("https://pokeapi.co/api/v2/type", {
+            next: { revalidate: 86400 }
+        }),
+        fetch("https://pokeapi.co/api/v2/pokemon-habitat", {
+            next: { revalidate: 86400 }
+        })
+    ]);
 
-    const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${pageLimit}&offset=${offset}`);
-    const data = await response.json();
+    const [pokemonData, typesData, habitatsData] = await Promise.all([
+        pokemonResponse.json(),
+        typesResponse.json(),
+        habitatsResponse.json()
+    ]);
 
-    const {results: types} = await fetch("https://pokeapi.co/api/v2/type").then((response) => response.json());
-    const {results: habitats} = await fetch("https://pokeapi.co/api/v2/pokemon-habitat").then((response) => response.json());
+    const {results: types} = typesData;
+    const {results: habitats} = habitatsData;
 
+    // Buscar habitats em paralelo
     const pokemonHabitats = await Promise.all(
-        habitats.map(
-            async (habitat: { url: string }) => {
-                const data = await fetch(habitat.url)
-                    .then((response) => response.json())
+        habitats.map(async (habitat: { url: string }) => {
+            const data = await fetch(habitat.url, {
+                next: { revalidate: 86400 }
+            }).then(res => res.json());
 
-                return {
-                    name: data.name,
-                    pokemon_species: data.pokemon_species.map(({name}: { name: string }) => name),
-                }
-            }
-        )
-    )
+            return {
+                name: data.name,
+                pokemon_species: data.pokemon_species.map(({name}: { name: string }) => name)
+            };
+        })
+    );
 
+    // Otimizar busca de pokemons com concorrência limitada
+    const limit = pLimit(10);
     const fetchPokemons = async (url: string) => {
-        const pokemonData = await fetch(url);
+        const response = await fetch(url, {
+            next: { revalidate: 3600 }
+        });
 
-        if (!pokemonData.ok) {
-            throw new Error(
-                `Error fetching Pokémon data from ${url}: ${pokemonData.statusText}`
-            );
+        if (!response.ok) {
+            throw new Error(`Error fetching Pokémon data from ${url}: ${response.statusText}`);
         }
 
-        const data = await pokemonData.json();
-
-        const habitatName = pokemonHabitats.find(({pokemon_species}) => pokemon_species.includes(data.name))?.name
+        const data = await response.json();
+        const habitatName = pokemonHabitats.find(({pokemon_species}) => 
+            pokemon_species.includes(data.name)
+        )?.name;
 
         return {
             id: data.id,
@@ -74,32 +101,48 @@ async function getPokemonData(page: number, name?: string, typeName?: string, po
             weight: data.weight,
             height: data.height,
             habitat: habitatName,
-            types: [...data.types],
+            types: data.types,
             sprites: {
                 front_default: data.sprites.front_default,
-            },
+            }
         };
     };
 
-    const fetchPromises = data.results.map(({url}: { url: string }) => limit(() => fetchPokemons(url)))
+    // Filtrar resultados antes de fazer fetch detalhado
+    let filteredResults = pokemonData.results;
+    
+    if (name) {
+        filteredResults = filteredResults.filter(pokemon => 
+            pokemon.name.toLowerCase().includes(name.toLowerCase())
+        );
+    }
+
+    // Buscar dados detalhados apenas dos pokemons filtrados
+    const fetchPromises = filteredResults
+        .map(({url}) => limit(() => fetchPokemons(url)));
 
     const results = await Promise.allSettled(fetchPromises);
-
+    
     let pokemons: Pokemon[] = results
-        .filter((result) => result.status === "fulfilled")
-        .map((result) => (result as PromiseFulfilledResult<Pokemon>).value);
+        .filter((result): result is PromiseFulfilledResult<Pokemon> => result.status === "fulfilled")
+        .map(result => result.value);
 
-    if (name) {
-        pokemons = pokemons.filter(pokemon => pokemon?.name.toLowerCase().includes(name.toLowerCase()));
-    }
+    // Aplicar filtros restantes
     if (pokemonHabitat) {
         pokemons = pokemons.filter(pokemon => pokemon?.habitat?.includes(pokemonHabitat));
     }
-    if (typeName){
-        pokemons = pokemons.filter(pokemon => pokemon?.types.find(({type}) => type.name.includes(typeName)))
+    if (typeName) {
+        pokemons = pokemons.filter(pokemon => 
+            pokemon?.types.some(({type}) => type.name.includes(typeName))
+        );
     }
 
-    return {pokemons, count: data.count, types, habitats};
+    return {
+        pokemons: pokemons.slice(page * PER_PAGE_LIMIT, (page + 1) * PER_PAGE_LIMIT),
+        count: pokemonData.count,
+        types,
+        habitats
+    };
 }
 
 export default async function HomePage({searchParams}: PageProps) {
