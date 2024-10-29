@@ -30,16 +30,13 @@ async function getPokemonData(page: number, name?: string, typeName?: string, po
 }> {
     "use server";
     
-    // Aplicar filtros na URL da API para reduzir dados transferidos
     let apiUrl = `https://pokeapi.co/api/v2/pokemon`;
     
     if (name || typeName || pokemonHabitat) {
-        // Se houver filtros, buscar todos para filtrar no servidor
         const offset = 0;
         const limit = 1025;
         apiUrl += `?limit=${limit}&offset=${offset}`;
     } else {
-        // Se não houver filtros, usar paginação normal
         const offset = Math.min(Math.max(page * PER_PAGE_LIMIT, 0), 1015);
         apiUrl += `?limit=${PER_PAGE_LIMIT}&offset=${offset}`;
     }
@@ -65,7 +62,6 @@ async function getPokemonData(page: number, name?: string, typeName?: string, po
     const {results: types} = typesData;
     const {results: habitats} = habitatsData;
 
-    // Buscar habitats em paralelo
     const pokemonHabitats = await Promise.all(
         habitats.map(async (habitat: { url: string }) => {
             const data = await fetch(habitat.url, {
@@ -79,7 +75,6 @@ async function getPokemonData(page: number, name?: string, typeName?: string, po
         })
     );
 
-    // Otimizar busca de pokemons com concorrência limitada
     const limit = pLimit(10);
     const fetchPokemons = async (url: string) => {
         const response = await fetch(url, {
@@ -108,18 +103,16 @@ async function getPokemonData(page: number, name?: string, typeName?: string, po
         };
     };
 
-    // Filtrar resultados antes de fazer fetch detalhado
     let filteredResults = pokemonData.results;
     
     if (name) {
-        filteredResults = filteredResults.filter(pokemon => 
-            pokemon.name.toLowerCase().includes(name.toLowerCase())
+        filteredResults = filteredResults.filter(({name}: {name:string}) => 
+            name.toLowerCase().includes(name.toLowerCase())
         );
     }
 
-    // Buscar dados detalhados apenas dos pokemons filtrados
     const fetchPromises = filteredResults
-        .map(({url}) => limit(() => fetchPokemons(url)));
+        .map(({url}:{url:string}) => limit(() => fetchPokemons(url)));
 
     const results = await Promise.allSettled(fetchPromises);
     
@@ -127,7 +120,6 @@ async function getPokemonData(page: number, name?: string, typeName?: string, po
         .filter((result): result is PromiseFulfilledResult<Pokemon> => result.status === "fulfilled")
         .map(result => result.value);
 
-    // Aplicar filtros restantes
     if (pokemonHabitat) {
         pokemons = pokemons.filter(pokemon => pokemon?.habitat?.includes(pokemonHabitat));
     }
