@@ -70,7 +70,7 @@ export default function PokemonPage() {
             })
             setIsLoading(false)
         })
-    }, [])
+    }, [params.id, searchParams])
 
     const updatePokemon = useCallback(async (id: string) => {
         setImageKey(i => i + 1)
