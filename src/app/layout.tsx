@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import Image from "next/image";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,10 +28,27 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      <body cz-shortcut-listen="true" className={`${geistSans.variable} ${geistMono.variable} 
+      bg-gradient-to-br from-zinc-900 to-zinc-950 text-gray-300 dark grid min-h-screen grid-rows-[auto_1fr]`}
       >
+        <header className="flex justify-center p-5 border-b bg-zinc-800">
+          <nav className="flex items-center justify-between gap-2 font-semibold container">
+            <Link className="inline-flex items-center hover:text-gray-400" href={"/"}>
+            <Image alt="" width={50} height={50} src={"https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Pok%C3%A9_Ball_icon.svg/770px-Pok%C3%A9_Ball_icon.svg.png"} />
+            <p className="text-sm">
+            Pokédex
+            </p>
+            </Link>
+            {/*<div>*/}
+            {/*  <Link href={`/pokemon/${Math.floor(Math.random() * 1025)}`}>*/}
+            {/*    Random Pokemon*/}
+            {/*  </Link>*/}
+            {/*</div>*/}
+          </nav>
+        </header>
+        <main className="w-full h-full flex justify-center items-center">
         {children}
+        </main>
       </body>
     </html>
   );
