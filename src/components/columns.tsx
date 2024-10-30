@@ -5,7 +5,7 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import Link from "next/link";
 import {buttonVariants} from "@/components/ui/button";
 import TypeBadges from "@/components/type-badges";
-import { Pokemon } from "@prisma/client";
+import {Pokemon} from "@prisma/client"
 
 export const pokemonColumns: ColumnDef<Pokemon>[] = [
     {
