@@ -16,13 +16,17 @@ export default function PokemonPage() {
     const [loading, setIsLoading] = useState<boolean>(true)
 
     const searchParams = useSearchParams()
-    const params = useParams<{id: string}>()
+    const params = useParams<{ id: string }>()
     const router = useRouter()
     const [imageKey, setImageKey] = useState<number>(0)
 
-    const getVariantType: () => string = () => {
+    const getVariantType: () => string | undefined = () => {
         const variantParam = searchParams.get("variant") as 'shiny'
-        return pokemon?.sprites.other.home[`front_${variantParam}`] || ""
+        const sprites = pokemon?.sprites.other?.["official-artwork"] ? pokemon?.sprites.other?.["official-artwork"] : pokemon?.sprites.other.home
+        if (variantParam) {
+            return sprites?.front_shiny ? sprites?.front_shiny : sprites?.front_default
+        }
+        return sprites?.front_default
     }
 
     const getPokedexEntry = (entries: any[]) => {
@@ -33,16 +37,18 @@ export default function PokemonPage() {
 
     const getPokemonForm = (name: string) => {
 
-        if (name.includes('gmax')) {
-            return 'Gigantamax'
-        }
-
         const forms = name.split('-')
         const formNames = forms.filter(formName => formName.includes('mega'))
-        if (formNames.length > 0) {
-            return formNames.map((_, index) => `Mega ${forms[index + 2]}`).join(' ')
+
+        if (forms.includes('gmax')) {
+            return "Gigantamax"
         }
-        if (formNames.length === 1) return formNames[0]
+
+        if (forms.includes("x") || forms.includes("y")) {
+            return formNames.map((_, index) => `Mega ${forms[index + 2]}`).join(' ')
+        } else if (forms[1] === "mega") {
+            return "Mega"
+        }
         if (name.includes('-')) {
             return name.split('-')[1];
         }
@@ -74,8 +80,20 @@ export default function PokemonPage() {
 
     const updatePokemon = useCallback(async (id: string) => {
         setImageKey(i => i + 1)
-        const newUrl = searchParams.get('variant') ? `?variant=${searchParams.get('variant')}&form=${id}` : `?form=${id}`
-        router.push(newUrl)
+        const getNewUrl = (id: string) => {
+            if (id === params.id) {
+                return searchParams.get('variant') ?
+                    `${params.id}?variant=${searchParams.get('variant')}` :
+                    params.id
+            }
+
+            return searchParams.get('variant') ?
+                `?variant=${searchParams.get('variant')}&form=${id}` :
+                `?form=${id}`
+        }
+
+        router.push(getNewUrl(id))
+
         const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`)
         const pokemonData = await response.json()
 
@@ -91,8 +109,7 @@ export default function PokemonPage() {
             },
             types: pokemonData.types
         } as Pokemon))
-    }, [router, searchParams])
-
+    }, [router, searchParams, params.id])
 
     return (
         <div
@@ -111,7 +128,7 @@ export default function PokemonPage() {
                                 key={imageKey}
                                 width={300}
                                 height={300}
-                                src={!getVariantType() ? pokemon?.sprites.other.home.front_default : getVariantType()}
+                                src={getVariantType()}
                                 alt={pokemon.name.replaceAll('-', ' ')}
                                 initial={{opacity: 0,}}
                                 animate={{opacity: 1,}}
@@ -136,15 +153,21 @@ export default function PokemonPage() {
                         >
                             <ul className="p-5 flex flex-col justify-center gap-3 text-xl">
                                 <li className="capitalize font-bold text-3xl text-center mb-2">
-                                    <span>{pokemon.name} #{pokemon.id}</span>
+                                    <span>{pokemon.name.replaceAll("-", ' ').includes("gmax")
+                                        ? `${pokemon.name.replace("gmax", "").replace("-", '')} Gigantamax`
+                                        : pokemon.name.replaceAll("-", " ")} #{params.id}</span>
                                 </li>
+
                                 <li>Weight: {pokemon.weight / 100}kg</li>
                                 <li>Height: {pokemon.height / 10}m</li>
-                                <li className={"flex gap-2"}>
+                                <li className={"flex justify-between gap-2"}>
                                     <p>Types:</p>
-                                    {pokemon.types.map(({type}, i: number) => (
-                                        <TypeBadges type={type.name} key={i} />
-                                    ))}
+                                    <div className={"inline-flex gap-2"}>
+                                        {pokemon.types.map(({type}, i: number) => (
+                                            <TypeBadges type={type.name} key={i}/>
+                                        ))}
+
+                                    </div>
                                 </li>
                                 <li className={"flex"}>
                                     Abilities: {pokemon.abilities.map(({ability, slot}) => (
@@ -155,20 +178,18 @@ export default function PokemonPage() {
                                     Pokedex Entry: {pokemon.pokedex_entry}
                                 </li>
                             </ul>
-                            <div className={"flex gap-10 justify-center items-center h-[69%]"}>
+                            <div className={"flex flex-wrap gap-2 justify-center items-center h-[69%]"}>
                                 {pokemon.forms.length > 1 && pokemon.forms.map((form, i) => {
                                     const formName = getPokemonForm(form.pokemon.name);
                                     const id = form.pokemon.url.split('/')[6];
-
                                     const formClass = () => {
                                         if (formName === "Gigantamax") {
                                             return 'bg-dyanamax text-white hover:drop-shadow-dynamax border-[#D42368]'
-                                        } else if (formName.includes("Mega")) {
+                                        } else if (formName.includes("mega") || formName.includes("Mega")) {
                                             return 'bg-mega text-white hover:drop-shadow-mega border-[#299CCD]'
                                         }
                                         return ""
                                     }
-
                                     return (
                                         <Button key={i} onClick={() => updatePokemon(id)}
                                                 className={`capitalize ${formClass()}`}>

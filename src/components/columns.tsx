@@ -1,11 +1,11 @@
 'use client'
 
-import {Pokemon} from "@/types/types";
 import {ColumnDef} from "@tanstack/table-core";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import Link from "next/link";
 import {buttonVariants} from "@/components/ui/button";
 import TypeBadges from "@/components/type-badges";
+import { Pokemon } from "@prisma/client";
 
 export const pokemonColumns: ColumnDef<Pokemon>[] = [
     {
@@ -19,7 +19,7 @@ export const pokemonColumns: ColumnDef<Pokemon>[] = [
             const pokemon = row.original
             return (
                 <Avatar>
-                    <AvatarImage src={pokemon?.sprites.front_default} alt={pokemon?.name.replaceAll('-', ' ')}/>
+                    <AvatarImage src={pokemon?.sprites} alt={pokemon?.name.replaceAll('-', ' ')}/>
                     <AvatarFallback>
                         {pokemon?.name.replaceAll('-', ' ').substring(0, 2)}
                     </AvatarFallback>
@@ -45,8 +45,8 @@ export const pokemonColumns: ColumnDef<Pokemon>[] = [
             const types = row.original?.types;
             return (
                 <div className={"flex gap-2"}>
-                    {types?.map(({type}, i) => (
-                        <TypeBadges type={type.name} key={i}/>
+                    {JSON.parse(types).map((type:string, i: number) => (
+                        <TypeBadges type={type} key={i}/>
                     ))}
                 </div>
             )

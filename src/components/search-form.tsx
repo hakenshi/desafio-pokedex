@@ -22,7 +22,6 @@ export default function SearchForm({types, habitats}: {
         if (currentPage) {
             params.set("page", currentPage.toString())
         }
-
         if (query) {
             params.set("name", query);
         } else {
@@ -60,9 +59,6 @@ export default function SearchForm({types, habitats}: {
         // updateUrl()
     }
 
-    useEffect(() => {
-        updateUrl()
-    }, [pokemonHabitat, pokemonType]);
 
     return (
         <div className={"grid grid-rows-1 grid-cols-1 gap-4"}>

@@ -66,6 +66,10 @@ ul, li{
   list-style: none;
 }
 
+.active{
+  @apply bg-zinc-700 text-white hover:bg-zinc-800 !important;
+}
+
 @layer base {
   * {
     @apply border-border;
