@@ -10,6 +10,6 @@ export default async function HomePage() {
     const {results:habitats} = await fetch(`https://pokeapi.co/api/v2/pokemon-habitat`).then(response => response.json())
 
     return (
-            <DataTable data={pokemons} columns={pokemonColumns} types={types} habitats={habitats} />
+        <DataTable data={pokemons} columns={pokemonColumns} types={types} habitats={habitats} />
     )
 }

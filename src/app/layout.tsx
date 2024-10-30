@@ -40,7 +40,7 @@ export default function RootLayout({
             </Link>
           </nav>
         </header>
-        <main className="w-full h-full flex justify-center items-center">
+        <main className="h-full flex justify-center items-center">
         {children}
         </main>
       </body>

@@ -5,8 +5,9 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import Link from "next/link";
 import {buttonVariants} from "@/components/ui/button";
 import TypeBadges from "@/components/type-badges";
+import {Pokemon} from "@prisma/client";
 
-export const pokemonColumns: ColumnDef<{id:number; name:string; sprites: string; habitat: string; types: string;}>[] = [
+export const pokemonColumns: ColumnDef<Pokemon>[] = [
     {
         accessorKey: "id",
         header: "Id"
@@ -17,12 +18,14 @@ export const pokemonColumns: ColumnDef<{id:number; name:string; sprites: string;
         cell: ({row}) => {
             const pokemon = row.original
             return (
-                <Avatar>
-                    <AvatarImage src={pokemon?.sprites} alt={pokemon?.name.replaceAll('-', ' ')}/>
-                    <AvatarFallback>
-                        {pokemon?.name.replaceAll('-', ' ').substring(0, 2)}
-                    </AvatarFallback>
-                </Avatar>
+                <div className={"flex justify-center"}>
+                    <Avatar>
+                        <AvatarImage src={pokemon?.sprites} alt={pokemon?.name.replaceAll('-', ' ')}/>
+                        <AvatarFallback>
+                            {pokemon?.name.replaceAll('-', ' ').substring(0, 2)}
+                        </AvatarFallback>
+                    </Avatar>
+                </div>
             )
         }
     },
@@ -43,8 +46,8 @@ export const pokemonColumns: ColumnDef<{id:number; name:string; sprites: string;
         cell: ({row}) => {
             const types = row.original?.types;
             return (
-                <div className={"flex gap-2"}>
-                    {JSON.parse(types).map((type:string, i: number) => (
+                <div className={"flex gap-2 justify-center"}>
+                    {JSON.parse(types).map((type: string, i: number) => (
                         <TypeBadges type={type} key={i}/>
                     ))}
                 </div>

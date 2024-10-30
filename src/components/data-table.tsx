@@ -24,7 +24,6 @@ interface DataTable<TData, TValue> {
 }
 
 export function DataTable<TData, TValue>({columns, data, types, habitats}: DataTable<TData, TValue>) {
-
     const table = useReactTable({
         data,
         columns,
@@ -32,19 +31,20 @@ export function DataTable<TData, TValue>({columns, data, types, habitats}: DataT
         getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
     })
-
-    const capitalize = (name:string) => name.charAt(0).toUpperCase() + name.slice(1)
+    const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
     const resetFilters = () => {
         // table.getColumn('name')?.setFilterValue("")
         table.setColumnFilters([])
     }
     return (
-        <div className={"border rounded border-zinc-600 overflow-auto max-w-5xl w-full p-5"}>
-            <div className={"flex flex-col md:flex-row  gap-2 mb-3"}>
-                <Input value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-                       onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
-                       placeholder="Input a pokemon name to search..."/>
-                <Select value={(table.getColumn("types")?.getFilterValue() as string) ?? ""} onValueChange={(event) => table.getColumn("types")?.setFilterValue(event)}>
+        <div className={"border rounded border-zinc-600 container md:p-5"}>
+            <div className={"flex flex-col md:flex-row gap-2 mb-3"}>
+                <Input
+                    value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+                    onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+                    placeholder="Input a pokemon name to search..."/>
+                <Select value={(table.getColumn("types")?.getFilterValue() as string) ?? ""}
+                        onValueChange={(event) => table.getColumn("types")?.setFilterValue(event)}>
                     <SelectTrigger>
                         <SelectValue placeholder="Choose a pokemon type"/>
                     </SelectTrigger>
@@ -60,7 +60,8 @@ export function DataTable<TData, TValue>({columns, data, types, habitats}: DataT
                         </SelectGroup>
                     </SelectContent>
                 </Select>
-                <Select value={(table.getColumn("habitat")?.getFilterValue() as string) ?? ""} onValueChange={e => table.getColumn("habitat")?.setFilterValue(e)}>
+                <Select value={(table.getColumn("habitat")?.getFilterValue() as string) ?? ""}
+                        onValueChange={e => table.getColumn("habitat")?.setFilterValue(e)}>
                     <SelectTrigger>
                         <SelectValue placeholder="Choose a pokemon habitat"/>
                     </SelectTrigger>
@@ -80,12 +81,16 @@ export function DataTable<TData, TValue>({columns, data, types, habitats}: DataT
                     Reset Filters
                 </Button>
             </div>
-            <Table className={"overflow-auto"}>
+            <Table className={"overflow-x-auto"}>
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow className={"p-2"} key={headerGroup.id}>
                             {headerGroup.headers.map((header) => (
-                                <TableHead className={"text-center font-bold"} key={header.id}>
+                                <TableHead
+                                    className={`text-center font-bold 
+                        ${["types", "habitat", "id"].includes(header.column.id) ? "hidden md:table-cell" : ""}`}
+                                    key={header.id}
+                                >
                                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                                 </TableHead>
                             ))}
@@ -95,12 +100,14 @@ export function DataTable<TData, TValue>({columns, data, types, habitats}: DataT
                 <TableBody>
                     {table.getRowModel().rows?.length > 0 ? (
                         table.getRowModel().rows.map((row) => (
-                            <TableRow className={"m-0 p-0"} key={row.id}>
+                            <TableRow key={row.id}>
                                 {row.getVisibleCells().map((cell) => (
-                                    <TableCell className={"text-center capitalize text-zinc-200 p-2"} key={cell.id}>
-                                        <div className={"flex justify-center"}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </div>
+                                    <TableCell
+                                        className={`text-center capitalize text-zinc-200 p-2 
+                            ${["types", "habitat", "id"].includes(cell.column.id) ? "hidden md:table-cell" : ""}`}
+                                        key={cell.id}
+                                    >
+                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                     </TableCell>
                                 ))}
                             </TableRow>
@@ -108,7 +115,7 @@ export function DataTable<TData, TValue>({columns, data, types, habitats}: DataT
                     ) : (
                         <TableRow>
                             <TableCell colSpan={columns.length} className="h-24 text-center">
-                                No pokemons where found.
+                                No pokemons were found.
                             </TableCell>
                         </TableRow>
                     )}
@@ -117,7 +124,9 @@ export function DataTable<TData, TValue>({columns, data, types, habitats}: DataT
             <div className={"inline-flex items-center justify-center w-full gap-5"}>
                 <Button className={"px-3"} variant={"default"} disabled={!table.getCanPreviousPage()}
                         onClick={() => table.previousPage()}><ChevronLeft/></Button>
-                <PaginationNumbers table={table}/>
+                {window.screen.width >= 768 && (
+                    <PaginationNumbers table={table}/>
+                )}
                 <Button className={"px-3"} variant={"default"} disabled={!table.getCanNextPage()}
                         onClick={() => table.nextPage()}> <ChevronRight/></Button>
             </div>
