@@ -6,9 +6,7 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/c
 import {Button} from "./ui/button";
 import {Input} from "./ui/input";
 import {Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue} from "./ui/select";
-import {log} from "node:util";
 import {ChevronLeft, ChevronRight} from "lucide-react";
-import {ReactNode, useState} from "react";
 import {PaginationNumbers} from "@/components/PaginationNumbers";
 import TypeBadges from "@/components/type-badges";
 

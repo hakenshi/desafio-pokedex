@@ -2,18 +2,8 @@ import {DataTable} from "@/components/data-table";
 import {pokemonColumns} from "@/components/columns";
 import { db } from "../../prisma/db";
 
-type PageProps = {
-    searchParams: Promise<{
-        page?: string
-        name?: string
-        type?: string
-        habitat?: string
-    }>
-}
 
-export default async function HomePage({searchParams}: PageProps) {
-
-    const {page, name, type, habitat} = await searchParams
+export default async function HomePage() {
 
     const pokemons = await db.pokemon.findMany()
     const {results:types} = await fetch("https://pokeapi.co/api/v2/type").then(response => response.json())

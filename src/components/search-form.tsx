@@ -3,7 +3,7 @@
 import {Input} from "@/components/ui/input";
 import {useRouter, useSearchParams} from "next/navigation";
 import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 
 export default function SearchForm({types, habitats}: {
     types: { name: string; url: string }[];
