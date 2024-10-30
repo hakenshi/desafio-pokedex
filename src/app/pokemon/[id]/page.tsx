@@ -6,7 +6,6 @@ import Link from "next/link";
 import {useCallback, useEffect, useState} from "react"
 import {useSearchParams, useRouter, useParams} from "next/navigation";
 import {Loader2} from "lucide-react";
-import {AnimatePresence, motion} from "framer-motion";
 import TypeBadges from "@/components/type-badges";
 import Image from "next/image";
 
