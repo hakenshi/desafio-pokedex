@@ -124,9 +124,9 @@ export function DataTable<TData, TValue>({columns, data, types, habitats}: DataT
             <div className={"inline-flex items-center justify-center w-full gap-5"}>
                 <Button className={"px-3"} variant={"default"} disabled={!table.getCanPreviousPage()}
                         onClick={() => table.previousPage()}><ChevronLeft/></Button>
-                {window.screen.width >= 768 && (
-                    <PaginationNumbers table={table}/>
-                )}
+                    <div className={"md:block hidden"}>
+                        <PaginationNumbers table={table}/>
+                    </div>
                 <Button className={"px-3"} variant={"default"} disabled={!table.getCanNextPage()}
                         onClick={() => table.nextPage()}> <ChevronRight/></Button>
             </div>
